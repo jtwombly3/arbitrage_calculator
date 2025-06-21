@@ -27,18 +27,17 @@
 
   <py-script>
 import random
-from pyscript import Element
 
-def calculate(*args, **kwargs):
+def calculate():
     output = Element("output")
     output.element.innerText = ""
 
-    try:
-        odd_set1 = Element("odd1").element.value
-        odd_set2 = Element("odd2").element.value
-        path = Element("mode").element.value.strip().lower()
-        amount = float(Element("amount").element.value)
+    odd_set1 = Element("odd1").element.value
+    odd_set2 = Element("odd2").element.value
+    path = Element("mode").element.value.strip().lower()
+    amount = float(Element("amount").element.value)
 
+    try:
         # parsing first set
         neg1 = odd_set1.find('-')
         comma1 = odd_set1.find(',')
@@ -70,31 +69,36 @@ def calculate(*args, **kwargs):
         combined_prob = (prob_neg + prob_pos) * 100
 
         if combined_prob >= 100:
-            output.element.innerText = "Odds cannot be used for arbitrage.\n" + random.choice([
-                "Get a job buddy", "You thought idiot", "You're a bum"
-            ])
+            messages = [
+                'Get a job buddy',
+                'You thought idiot',
+                'You\'re a bum'
+            ]
+            output.element.innerText = 'Odds cannot be used for arbitrage.\n' + random.choice(messages)
             return
         else:
-            output.element.innerText += "Odds can be used for arbitrage.\n"
+            output.element.innerText += 'Odds can be used for arbitrage.\n'
 
         profit_percent = abs(((1 / best_neg) + (1 / best_pos)) - 1) * 100
 
-        if path == "s":
+        if path == 's':
             ab = amount
             a = ab / (1 + (best_neg / best_pos))
             b = ab - a
+
             output.element.innerText += f"With a total stake of ${ab:.2f}\n"
             output.element.innerText += f"Bet ${a:.2f} on the + odds\n"
             output.element.innerText += f"Bet ${b:.2f} on the - odds\n"
-            expected_profit = ab * (profit_percent/100) + ab
             output.element.innerText += f"{profit_percent:.2f}% ROI\n"
+            expected_profit = ab * (profit_percent/100) + ab
             output.element.innerText += f"Expected return: ${expected_profit:.2f}\n"
 
-        elif path == "p":
+        elif path == 'p':
             goal_profit = amount
             total_stake = goal_profit / (profit_percent / 100)
             a = total_stake / (1 + (best_neg / best_pos))
             b = total_stake - a
+
             output.element.innerText += f"You need to stake ${total_stake:.2f} to earn ${goal_profit:.2f} in profit\n"
             output.element.innerText += f"Bet ${a:.2f} on the + odds\n"
             output.element.innerText += f"Bet ${b:.2f} on the - odds\n"
