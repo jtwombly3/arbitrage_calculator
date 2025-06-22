@@ -17,6 +17,7 @@
         }
     </style>
 </head>
+#tailwind css styling elements
 <body class="bg-gradient-to-br from-blue-400 to-gray-50 flex items-center justify-center p-4 antialiased">
     <div id="app-container" class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border-t-4 border-purple-600">
         <h1 class="text-3xl font-bold text-gray-800 text-center mb-6">Arbitrage Calculator</h1>
@@ -280,7 +281,7 @@
                 calculatedB = (amount - calculatedA);
                 totalStake = amount;
                 expectedProfit = (totalStake * (profitPercent / 100)); // Profit is total stake * ROI
-                expectedProfit = totalStake + expectedProfit; // Total return is stake + profit
+                
 
             } else if (path === 'P') { // Calculate based on Profit
                 if (isNaN(amount) || amount <= 0) {
