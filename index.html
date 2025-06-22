@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+
+<!--This webapp's code was originally written in python. After the program was functional, Google Gemini was used to format it into html.-->
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -132,7 +135,7 @@
                 <span class="font-semibold">ROI (Profit Percent):</span> <span id="profitPercentage"></span>%
             </p>
             <p class="text-gray-700 font-bold text-lg mt-4">
-                <span class="text-purple-800">Expected Profit:</span> $<span id="expectedProfit"></span>
+                <span class="text-purple-800">Expected Return:</span> $<span id="expectedProfit"></span>
             </p>
         </div>
     </div>
@@ -281,7 +284,7 @@
                 calculatedB = (amount - calculatedA);
                 totalStake = amount;
                 expectedProfit = (totalStake * (profitPercent / 100)); // Profit is total stake * ROI
-                
+                expectedProfit = totalStake + expectedProfit; // Total return is stake + profit
 
             } else if (path === 'P') { // Calculate based on Profit
                 if (isNaN(amount) || amount <= 0) {
