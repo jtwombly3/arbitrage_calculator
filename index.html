@@ -1,113 +1,338 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Arbitrage Betting Calculator</title>
-  <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
-  <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbitrage Calculator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Inter font and to ensure full height */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Ensure the main container takes full viewport height */
+        #app-container {
+            min-height: 100vh;
+        }
+    </style>
 </head>
-<body>
+<body class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4 antialiased">
+    <div id="app-container" class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border-t-4 border-purple-600">
+        <h1 class="text-3xl font-bold text-gray-800 text-center mb-6">Arbitrage Calculator</h1>
 
-  <h1>Arbitrage Betting Calculator</h1>
+        <div class="space-y-4">
+            <!-- Input for First Odd Set -->
+            <div>
+                <label for="oddSet1" class="block text-gray-700 text-sm font-semibold mb-2">
+                    First Set of Odds (e.g., (-450,+350))
+                </label>
+                <input
+                    type="text"
+                    id="oddSet1"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition duration-200"
+                    placeholder="(-450,+350)"
+                />
+            </div>
 
-  <label>First Odds (example: (-450,+350)):</label><br>
-  <input type="text" id="odd1"><br><br>
+            <!-- Input for Second Odd Set -->
+            <div>
+                <label for="oddSet2" class="block text-gray-700 text-sm font-semibold mb-2">
+                    Second Set of Odds (e.g., (-520,+400))
+                </label>
+                <input
+                    type="text"
+                    id="oddSet2"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition duration-200"
+                    placeholder="(-520,+400)"
+                />
+            </div>
 
-  <label>Second Odds (example: (-520,+400)):</label><br>
-  <input type="text" id="odd2"><br><br>
+            <!-- Stake or Profit selection -->
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Calculate by:</label>
+                <div class="flex space-x-4">
+                    <label class="inline-flex items-center">
+                        <input
+                            type="radio"
+                            name="path"
+                            value="S"
+                            id="pathStake"
+                            checked
+                            class="form-radio text-purple-600 focus:ring-purple-500 h-4 w-4"
+                        />
+                        <span class="ml-2 text-gray-700">Stake</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input
+                            type="radio"
+                            name="path"
+                            value="P"
+                            id="pathProfit"
+                            class="form-radio text-purple-600 focus:ring-purple-500 h-4 w-4"
+                        />
+                        <span class="ml-2 text-gray-700">Profit</span>
+                    </label>
+                </div>
+            </div>
 
-  <label>Stake or Profit? (S or P):</label><br>
-  <input type="text" id="mode"><br><br>
+            <!-- Input for Amount (Stake or Profit) -->
+            <div>
+                <label for="amount" id="amountLabel" class="block text-gray-700 text-sm font-semibold mb-2">
+                    Amount to Stake ($)
+                </label>
+                <input
+                    type="number"
+                    id="amount"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition duration-200"
+                    placeholder="e.g., 1000"
+                    min="0"
+                    step="0.01"
+                />
+            </div>
 
-  <label>Amount (Stake or Profit Goal):</label><br>
-  <input type="number" id="amount"><br><br>
+            <!-- Calculate Button -->
+            <button
+                id="calculateBtn"
+                class="w-full bg-purple-600 text-white p-3 rounded-lg font-bold text-lg hover:bg-purple-700 transition duration-300 transform hover:scale-105 shadow-md"
+            >
+                Calculate Arbitrage
+            </button>
+        </div>
 
-  <button py-click="calculate()">Calculate</button>
+        <!-- Error Message Display -->
+        <div id="errorMessage" class="mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg hidden" role="alert">
+            <p class="font-bold">Error:</p>
+            <p id="errorMessageText"></p>
+        </div>
 
-  <div id="output"></div>
+        <!-- Results Display -->
+        <div id="resultsDisplay" class="mt-6 p-6 bg-purple-50 rounded-lg shadow-inner border border-purple-200 hidden">
+            <h2 class="text-xl font-bold text-purple-800 mb-4">Calculation Results:</h2>
+            <p class="text-gray-700 mb-2">
+                <span class="font-semibold">Combined Implied Probability:</span> <span id="combinedProbability"></span>%
+            </p>
+            <p class="text-gray-700 mb-2">
+                <span class="font-semibold">Best Negative Odds:</span> <span id="bestNegOdds"></span> (Decimal)
+            </p>
+            <p class="text-gray-700 mb-2">
+                <span class="font-semibold">Best Positive Odds:</span> <span id="bestPosOdds"></span> (Decimal)
+            </p>
+            <p class="text-gray-700 mb-2">
+                <span class="font-semibold">Total Stake:</span> $<span id="totalStake"></span>
+            </p>
+            <p class="text-gray-700 mb-2">
+                <span class="font-semibold">Bet on + Odds:</span> $<span id="betOnPos"></span>
+            </p>
+            <p class="text-gray-700 mb-2">
+                <span class="font-semibold">Bet on - Odds:</span> $<span id="betOnNeg"></span>
+            </p>
+            <p class="text-gray-700 mb-2">
+                <span class="font-semibold">ROI (Profit Percent):</span> <span id="profitPercentage"></span>%
+            </p>
+            <p class="text-gray-700 font-bold text-lg mt-4">
+                <span class="text-purple-800">Expected Profit:</span> $<span id="expectedProfit"></span>
+            </p>
+        </div>
+    </div>
 
-  <py-script>
-import random
+    <script>
+        // Get references to DOM elements
+        const oddSet1Input = document.getElementById('oddSet1');
+        const oddSet2Input = document.getElementById('oddSet2');
+        const pathStakeRadio = document.getElementById('pathStake');
+        const pathProfitRadio = document.getElementById('pathProfit');
+        const amountLabel = document.getElementById('amountLabel');
+        const amountInput = document.getElementById('amount');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const errorMessageText = document.getElementById('errorMessageText');
+        const resultsDisplayDiv = document.getElementById('resultsDisplay');
 
-def calculate():
-    output = Element("output")
-    output.element.innerText = ""
+        // References to results display spans
+        const combinedProbabilitySpan = document.getElementById('combinedProbability');
+        const bestNegOddsSpan = document.getElementById('bestNegOdds');
+        const bestPosOddsSpan = document.getElementById('bestPosOdds');
+        const totalStakeSpan = document.getElementById('totalStake');
+        const betOnPosSpan = document.getElementById('betOnPos');
+        const betOnNegSpan = document.getElementById('betOnNeg');
+        const profitPercentageSpan = document.getElementById('profitPercentage');
+        const expectedProfitSpan = document.getElementById('expectedProfit');
 
-    odd_set1 = Element("odd1").element.value
-    odd_set2 = Element("odd2").element.value
-    path = Element("mode").element.value.strip().lower()
-    amount = float(Element("amount").element.value)
+        /**
+         * Hides the error message and results display.
+         */
+        const clearMessages = () => {
+            errorMessageDiv.classList.add('hidden');
+            resultsDisplayDiv.classList.add('hidden');
+        };
 
-    try:
-        # parsing first set
-        neg1 = odd_set1.find('-')
-        comma1 = odd_set1.find(',')
-        pos1 = odd_set1.find('+')
-        end1 = len(odd_set1)
+        /**
+         * Displays an error message.
+         * @param {string} message - The error message to display.
+         */
+        const showErrorMessage = (message) => {
+            clearMessages();
+            errorMessageText.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+        };
 
-        site1_neg = int(odd_set1[neg1+1:comma1])
-        site1_pos = int(odd_set1[pos1+1:end1])
+        /**
+         * Parses the input odd set string (e.g., "(-450,+350)") and returns
+         * an object with negative and positive odds as numbers.
+         * @param {string} oddSetString - The input string for odds.
+         * @returns {object|null} An object { neg: number, pos: number } or null if invalid.
+         */
+        const parseOdds = (oddSetString) => {
+            // Regular expression to match the expected format like "(-XXX,+YYY)"
+            const match = oddSetString.match(/\((-?\d+),(\+?\d+)\)/);
+            if (!match) {
+                return null; // Return null if format doesn't match
+            }
+            // Extract negative and positive odd values, convert to integers
+            const negOdd = parseInt(match[1].replace('-', ''));
+            const posOdd = parseInt(match[2].replace('+', ''));
 
-        # parsing second set
-        neg2 = odd_set2.find('-')
-        comma2 = odd_set2.find(',')
-        pos2 = odd_set2.find('+')
-        end2 = len(odd_set2)
+            // Basic validation for numbers
+            if (isNaN(negOdd) || isNaN(posOdd) || negOdd <= 0 || posOdd <= 0) {
+                return null;
+            }
+            return { neg: negOdd, pos: posOdd };
+        };
 
-        site2_neg = int(odd_set2[neg2+1:comma2])
-        site2_pos = int(odd_set2[pos2+1:end2])
+        /**
+         * Converts American odds to decimal odds format.
+         * @param {number} americanOdds - The American odds value.
+         * @returns {number} The equivalent decimal odds.
+         */
+        const convertToDecimalOdds = (americanOdds) => {
+            if (americanOdds < 0) {
+                // For negative American odds (e.g., -450)
+                return (100 / Math.abs(americanOdds)) + 1;
+            } else {
+                // For positive American odds (e.g., +350)
+                return (americanOdds / 100) + 1;
+            }
+        };
 
-        site1_negdec = (100/site1_neg)+1
-        site1_posdec = (site1_pos/100)+1
-        site2_negdec = (100/site2_neg)+1
-        site2_posdec = (site2_pos/100)+1
+        /**
+         * Handles the calculation logic when the "Calculate" button is clicked.
+         */
+        const handleCalculate = () => {
+            clearMessages(); // Clear previous messages
 
-        best_neg = max(site1_negdec, site2_negdec)
-        best_pos = max(site1_posdec, site2_posdec)
+            // Get current input values
+            const oddSet1 = oddSet1Input.value.trim();
+            const oddSet2 = oddSet2Input.value.trim();
+            const path = pathStakeRadio.checked ? 'S' : 'P';
+            const amount = parseFloat(amountInput.value);
 
-        prob_neg = 1 / best_neg
-        prob_pos = 1 / best_pos
-        combined_prob = (prob_neg + prob_pos) * 100
+            // Parse and validate odd set 1
+            const parsedOddSet1 = parseOdds(oddSet1);
+            if (!parsedOddSet1) {
+                showErrorMessage('Invalid format for First Set of Odds. Example: (-450,+350)');
+                return;
+            }
 
-        if combined_prob >= 100:
-            messages = [
-                'Get a job buddy',
-                'You thought idiot',
-                'You\'re a bum'
-            ]
-            output.element.innerText = 'Odds cannot be used for arbitrage.\n' + random.choice(messages)
-            return
-        else:
-            output.element.innerText += 'Odds can be used for arbitrage.\n'
+            // Parse and validate odd set 2
+            const parsedOddSet2 = parseOdds(oddSet2);
+            if (!parsedOddSet2) {
+                showErrorMessage('Invalid format for Second Set of Odds. Example: (-520,+400)');
+                return;
+            }
 
-        profit_percent = abs(((1 / best_neg) + (1 / best_pos)) - 1) * 100
+            // Convert American odds to decimal odds for both sets
+            const site1_negdec = convertToDecimalOdds(-parsedOddSet1.neg); // Pass negative for correct conversion
+            const site1_posdec = convertToDecimalOdds(parsedOddSet1.pos);
+            const site2_negdec = convertToDecimalOdds(-parsedOddSet2.neg); // Pass negative for correct conversion
+            const site2_posdec = convertToDecimalOdds(parsedOddSet2.pos);
 
-        if path == 's':
-            ab = amount
-            a = ab / (1 + (best_neg / best_pos))
-            b = ab - a
+            // Determine the most favorable (highest) decimal odds for both negative and positive
+            const best_neg = Math.max(site1_negdec, site2_negdec);
+            const best_pos = Math.max(site1_posdec, site2_posdec);
 
-            output.element.innerText += f"With a total stake of ${ab:.2f}\n"
-            output.element.innerText += f"Bet ${a:.2f} on the + odds\n"
-            output.element.innerText += f"Bet ${b:.2f} on the - odds\n"
-            output.element.innerText += f"{profit_percent:.2f}% ROI\n"
-            expected_profit = ab * (profit_percent/100) + ab
-            output.element.innerText += f"Expected return: ${expected_profit:.2f}\n"
+            // Calculate implied probabilities
+            const prob_neg = (1 / best_neg);
+            const prob_pos = (1 / best_pos);
+            const combined_prob = (prob_neg + prob_pos) * 100;
 
-        elif path == 'p':
-            goal_profit = amount
-            total_stake = goal_profit / (profit_percent / 100)
-            a = total_stake / (1 + (best_neg / best_pos))
-            b = total_stake - a
+            // Check for arbitrage opportunity
+            if (combined_prob >= 100) {
+                // random messages for no arbitrage as per original script
+                const messages = ['Get a job buddy', 'You thought idiot', 'You\'re a bum'];
+                showErrorMessage(`Odds cannot be used for arbitrage. ${messages[Math.floor(Math.random() * messages.length)]}`);
+                return;
+            }
 
-            output.element.innerText += f"You need to stake ${total_stake:.2f} to earn ${goal_profit:.2f} in profit\n"
-            output.element.innerText += f"Bet ${a:.2f} on the + odds\n"
-            output.element.innerText += f"Bet ${b:.2f} on the - odds\n"
-        else:
-            output.element.innerText += "Invalid input for mode (use 'S' or 'P')"
+            // Arbitrage is possible, proceed with calculations
+            let calculatedA, calculatedB, profitPercent, totalStake, expectedProfit;
 
-    except Exception as e:
-        output.element.innerText += f"Error: {str(e)}"
-  </py-script>
+            profitPercent = Math.abs((prob_neg + prob_pos) - 1) * 100;
 
+            if (path === 'S') { // Calculate based on Stake
+                if (isNaN(amount) || amount <= 0) {
+                    showErrorMessage('Please enter a valid stake amount.');
+                    return;
+                }
+
+                // Calculate individual bets
+                calculatedA = (amount / (1 + (best_neg / best_pos)));
+                calculatedB = (amount - calculatedA);
+                totalStake = amount;
+                expectedProfit = (totalStake * (profitPercent / 100)); // Profit is total stake * ROI
+                expectedProfit = totalStake + expectedProfit; // Total return is stake + profit
+
+            } else if (path === 'P') { // Calculate based on Profit
+                if (isNaN(amount) || amount <= 0) {
+                    showErrorMessage('Please enter a valid profit goal.');
+                    return;
+                }
+                if (profitPercent === 0) { // Avoid division by zero if profit percent is somehow 0
+                    showErrorMessage('Profit percentage is zero, cannot calculate based on profit goal.');
+                    return;
+                }
+
+                // Calculate total stake needed for desired profit
+                totalStake = amount / (profitPercent / 100);
+                calculatedA = (totalStake / (1 + (best_neg / best_pos)));
+                calculatedB = (totalStake - calculatedA);
+                expectedProfit = amount; // The desired profit is the expected profit
+
+            } else {
+                showErrorMessage('Input Error for Stake or Profit selection.');
+                return;
+            }
+
+            // Display results
+            combinedProbabilitySpan.textContent = combined_prob.toFixed(2);
+            bestNegOddsSpan.textContent = best_neg.toFixed(2);
+            bestPosOddsSpan.textContent = best_pos.toFixed(2);
+            totalStakeSpan.textContent = totalStake.toFixed(2);
+            betOnPosSpan.textContent = calculatedA.toFixed(2);
+            betOnNegSpan.textContent = calculatedB.toFixed(2);
+            profitPercentageSpan.textContent = profitPercent.toFixed(2);
+            expectedProfitSpan.textContent = expectedProfit.toFixed(2);
+
+            resultsDisplayDiv.classList.remove('hidden'); // Show results
+        };
+
+        // Event Listeners
+        calculateBtn.addEventListener('click', handleCalculate);
+
+        // Update amount label based on radio button selection
+        pathStakeRadio.addEventListener('change', () => {
+            if (pathStakeRadio.checked) {
+                amountLabel.textContent = 'Amount to Stake ($)';
+                amountInput.placeholder = 'e.g., 1000';
+            }
+        });
+
+        pathProfitRadio.addEventListener('change', () => {
+            if (pathProfitRadio.checked) {
+                amountLabel.textContent = 'Desired Profit ($)';
+                amountInput.placeholder = 'e.g., 50';
+            }
+        });
+    </script>
 </body>
 </html>
